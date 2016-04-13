@@ -114,11 +114,16 @@
 				'maxFileSize'
 			];
 
-			$scope.$watchGroup(watchValues, function(newValues) {
+			$scope.$watchGroup(watchValues, function(newValues, oldValues) {
 				vm.multiple = $scope.$eval($scope.multiple);
 				vm.uploadUrl = newValues[1];
 				vm.downloadUrl = newValues[2];
 				vm.maxFileSize = newValues[3];
+
+				if(newValues[0] !== oldValues[0]) {
+					vm.files = [];
+				}
+
 			});
 		}
 
