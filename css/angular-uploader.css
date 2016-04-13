@@ -1,0 +1,64 @@
+.upload-element {
+	background-color: #f5f5f5;
+	border: 1px solid #dcdcdc;
+	font-weight: bold;
+	margin: 0 7px 9px 0;
+	overflow-y: hidden;
+	padding: 4px 4px 4px 8px;
+	max-width: 448px;
+	font-size: 13px;
+}
+
+.upload-element .file-link {
+	font-size: 12px;
+	text-decoration: none;
+}
+
+.upload-element .link-name {
+	display: inline-block;
+	overflow: hidden;
+	padding: 3px 0;
+	text-overflow: ellipsis;
+	vertical-align: bottom;
+	white-space: nowrap;
+	max-width: 315px;
+}
+.upload-element .link-size {
+	color: #777;
+	display: inline-block;
+	padding: 3px 0;
+}
+.upload-element .link-remove {
+	font-size: 12px;
+	margin-top: 5px;
+	float: right;
+	cursor: pointer;
+	opacity: .5;
+}
+.upload-element .tool-holder {
+	display: inline-block;
+	float: right;
+	width: 50%;
+	padding-top: 4px;
+}
+.upload-element .tool-holder .link-internal{
+	font-size: 12px;
+	cursor: pointer;
+	opacity: .5;
+	float: right;
+}
+.upload-element .tool-holder .progress{
+	height: 10px;
+	width: 80%;
+	float: right;
+	margin-bottom: 0;
+	margin-right: 5px;
+}
+.upload-element .filename {
+	width: 30%;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: inline-block;
+	vertical-align: middle;
+}
