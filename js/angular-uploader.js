@@ -1,12 +1,71 @@
 /**
  * Created by yordan on 4/13/16.
  */
+
 (function() {
 	'use strict';
 
 	// Directive definition =============================================
-	angular.module('ui.angular-uploader')
+	angular.module('ui.angular-uploader', [
+			'ngFileUpload',
+			'ui.bootstrap'
+		])
 		.directive('angularUploader', function() {
+
+			var template = '\
+			<form name="myForm"> \
+				<div \
+					ng-if="file.isVisible" \
+					class="upload-element animated" \
+					ng-class="{zoomOut: file.animated}" \
+					role="alert" \
+					ng-repeat="(key, file) in vm.files"> \
+				<a \
+					class="file-link" \
+					ng-if="file.done" \
+					href="{{file.downloadUrl}}" \
+					target="_self"> \
+					<div class="link-name">{{file.data.name}}</div> \
+					<div class="link-size">({{file.data.size | bytes}})</div> \
+				</a> \
+				<div class="filename" ng-if="!file.done">{{file.data.name}}</div> \
+				<span class="link-size" ng-if="!file.done">({{file.data.size | bytes}})</span> \
+				<div ng-if="!file.done" class="tool-holder"> \
+					<i \
+						ng-click="vm.unload($index, file)" \
+						class="glyphicon glyphicon-remove link-internal"> \
+					</i> \
+					<uib-progressbar \
+						max="100" \
+						value="file.progress"> \
+					</uib-progressbar> \
+					</div> \
+					<i \
+						ng-if="file.done" \
+						ng-click="vm.unload($index, file)" \
+						class="glyphicon glyphicon-remove link-remove"> \
+					</i> \
+					</div> \
+					<div ng-repeat="errFile in vm.invalidFiles" class="alert alert-danger" role="alert"> \
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
+					<span aria-hidden="true">&times;</span> \
+				</button> \
+				Error uploading: \'{{errFile.name}}\'({{errFile.size | bytes}}) {{errFile.$error}} {{errFile.$errorParam}} \
+				</div> \
+				<button \
+					class="btn btn-default" \
+					ng-if="vm.showUploadBtn" \
+					ngf-max-size="vm.maxFileSize" \
+					ngf-model-invalid="errorFile" \
+					ngf-select="vm.load($files, $invalidFiles)" \
+					ngf-multiple="vm.multiple"> \
+					<i class="glyphicon glyphicon-paperclip"></i> \
+					<span ng-if="vm.multiple">Attach Files</span> \
+					<span ng-if="!vm.multiple">Attach File</span> \
+				</button> \
+			</form>';
+
+
 			return {
 				scope: {
 					uploadUrl: '<',
@@ -16,7 +75,7 @@
 					initFiles: '<?',
 					debug: '<?'
 				},
-				templateUrl: 'template/angular-uploader.tpl.html',
+				template: template,
 				controller: UploaderCtrl,
 				controllerAs: 'vm'
 			};
