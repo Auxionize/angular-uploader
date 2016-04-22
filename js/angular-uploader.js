@@ -29,32 +29,33 @@
 					ng-class="{zoomOut: file.animated}" \
 					role="alert" \
 					ng-repeat="(key, file) in vm.files"> \
-				<a \
-					class="file-link" \
-					ng-if="file.done" \
-					href="{{file.downloadUrl}}" \
-					target="_self"> \
-					<div class="link-name">{{file.data.name}}</div> \
-					<div class="link-size">({{file.data.size | bytes}})</div> \
-				</a> \
-				<div class="filename" ng-if="!file.done">{{file.data.name}}</div> \
-				<span class="link-size" ng-if="!file.done">({{file.data.size | bytes}})</span> \
-				<div ng-if="!file.done" class="tool-holder"> \
-					<i \
-						ng-click="vm.unload($index, file)" \
-						class="glyphicon glyphicon-remove link-internal"> \
-					</i> \
-					<uib-progressbar \
-						max="100" \
-						value="file.progress"> \
-					</uib-progressbar> \
+					<a \
+						class="file-link" \
+						ng-if="file.done" \
+						href="{{file.downloadUrl}}" \
+						target="_self"> \
+						<div class="link-name">{{file.data.name}}</div> \
+						<div class="link-size">({{file.data.size | bytes}})</div> \
+					</a> \
+					<div class="filename" ng-if="!file.done">{{file.data.name}}</div> \
+					<span class="link-size" ng-if="!file.done">({{file.data.size | bytes}})</span> \
+					<div ng-if="!file.done" class="tool-holder"> \
+						<i \
+							ng-click="vm.unload($index, file)" \
+							class="glyphicon glyphicon-remove link-internal"> \
+						</i> \
+						<uib-progressbar \
+							max="100" \
+							value="file.progress"> \
+						</uib-progressbar> \
 					</div> \
 					<i \
+						ng-if="!vm.readOnly" \
 						ng-if="file.done" \
 						ng-click="vm.unload($index, file)" \
 						class="glyphicon glyphicon-remove link-remove"> \
 					</i> \
-					</div> \
+				</div> \
 					<div ng-repeat="errFile in vm.invalidFiles" class="alert alert-danger" role="alert"> \
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
 					<span aria-hidden="true">&times;</span> \
@@ -63,7 +64,7 @@
 				</div> \
 				<button \
 					class="btn btn-default" \
-					ng-if="vm.showUploadBtn" \
+					ng-if="vm.showUploadBtn && !vm.readOnly" \
 					ngf-max-size="vm.maxFileSize" \
 					ngf-model-invalid="errorFile" \
 					ngf-select="vm.load($files, $invalidFiles)" \
@@ -77,9 +78,11 @@
 
 			return {
 				scope: {
+					type: '<',
 					uploadUrl: '<',
 					downloadUrl: '<',
 					deleteUrl: '<',
+					readOnly: '<',
 					multiple: '<?',
 					maxFileSize: '<?',
 					initFiles: '<?',
@@ -104,11 +107,13 @@
 			// set defaults =================================================
 			vm.files = $scope.initFiles = angular.isDefined($scope.initFiles) ? $scope.initFiles : [];
 			vm.invalidFiles = [];
+			vm.type = 'USER_BUCKET';//$scope.type;
 			vm.uploadUrl = $scope.uploadUrl;
 			vm.downloadUrl = $scope.downloadUrl;
 			vm.deleteUrl = $scope.deleteUrl;
 			vm.multiple = $scope.multiple = angular.isDefined($scope.multiple) ? $scope.multiple : false;
 			vm.maxFileSize = $scope.maxFileSize = angular.isDefined($scope.maxFileSize) ? $scope.maxFileSize : '2GB';
+			vm.readOnly = $scope.readOnly;
 			vm.showUploadBtn = true;
 			vm.debug = $scope.debug = angular.isDefined($scope.debug) ? $scope.debug : false;
 
@@ -153,6 +158,18 @@
 					file.isVisible = true;
 					file.animated = false;
 					file.progress = 0;
+
+					// upload and link
+					/*
+					 var replaceWith = {
+					 ':type': vm.type,
+					 ':id': file.data.linkId
+					 };
+
+					 var unlinkUrl = vm.deleteUrl.replace(/:type|:id/gi, function(key) {
+					 return replaceWith[key];
+					 });
+					 */
 
 					file.upload = Upload.upload({
 						url: vm.uploadUrl,
@@ -209,15 +226,14 @@
 			vm.unload = function($index, file) {
 				if(!file.done) {
 					file.upload.abort();
+					vm.removeElement($index, file);
 				}
-
-				//// todo remove it from server
-				//$http.delete('/currentUser')
-				//	.success(function(data) {
-				//		$scope.user = data.user;
-				//	});
-
-				vm.removeElement($index, file);
+				else {
+					$http.delete(vm.deleteUrl.replace(':id', file.data.linkId))
+						.success(function() {
+							vm.removeElement($index, file);
+						});
+				}
 			};
 
 		}];
