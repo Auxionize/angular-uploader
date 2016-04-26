@@ -21,7 +21,7 @@
 	text-overflow: ellipsis;
 	vertical-align: bottom;
 	white-space: nowrap;
-	max-width: 315px;
+	max-width: 77%;
 }
 .upload-element .link-size {
 	color: #777;
@@ -55,7 +55,7 @@
 	margin-right: 5px;
 }
 .upload-element .filename {
-	width: 30%;
+	max-width: 40%;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

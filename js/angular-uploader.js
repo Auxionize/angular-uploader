@@ -86,6 +86,10 @@
 					multiple: '<?',
 					maxFileSize: '<?',
 					initFiles: '<?',
+					onFileUploaded: '=?',
+					onFileRemoved: '=?',
+					onUploadInit: '=?',
+					onUploadEnd: '=?',
 					debug: '<?'
 				},
 				template: template,
@@ -105,7 +109,8 @@
 			var vm = this;
 
 			// set defaults =================================================
-			vm.files = $scope.initFiles = angular.isDefined($scope.initFiles) ? $scope.initFiles : [];
+			vm.files = [];
+			vm.initFiles = angular.isDefined($scope.initFiles) ? $scope.initFiles : [];
 			vm.invalidFiles = [];
 			vm.type = 'USER_BUCKET';//$scope.type;
 			vm.uploadUrl = $scope.uploadUrl;
@@ -116,6 +121,8 @@
 			vm.readOnly = $scope.readOnly;
 			vm.showUploadBtn = true;
 			vm.debug = $scope.debug = angular.isDefined($scope.debug) ? $scope.debug : false;
+			vm.localGroupFiles = 0;
+			vm.localGroupUploadedFiles = 0;
 
 			// debug watcher ================================================
 			if(vm.debug) {
@@ -139,9 +146,37 @@
 				});
 			}
 
+			var plugFileData = function(file, fileData) {
+				file.data = fileData;
+				file.done = true;
+				file.progress = 100;
+				file.isVisible = true;
+				file.downloadUrl = vm.downloadUrl.replace(':id', file.data.uuid);
+			};
+
+			var setUploadBtnVisibility = function() {
+				vm.showUploadBtn = !(vm.multiple === false && vm.files.length > 0);
+			};
+
+			if(vm.initFiles.length > 0) {
+				angular.forEach(vm.initFiles, function(fileData) {
+					var currentFile = {};
+
+					plugFileData(currentFile, fileData);
+					vm.files.push(currentFile);
+				});
+
+				setUploadBtnVisibility();
+			}
+
 			// load / upload files ==========================================
 			vm.load = function($files, $invalidFiles) {
+				vm.localGroupFiles = $files.length;
 				var tempDate = new Date().getTime();
+
+				if(angular.isFunction($scope.onUploadInit)) {
+					$scope.onUploadInit();
+				}
 
 				vm.files = vm.files.concat($files);
 				vm.invalidFiles = $invalidFiles;
@@ -159,18 +194,6 @@
 					file.animated = false;
 					file.progress = 0;
 
-					// upload and link
-					/*
-					 var replaceWith = {
-					 ':type': vm.type,
-					 ':id': file.data.linkId
-					 };
-
-					 var unlinkUrl = vm.deleteUrl.replace(/:type|:id/gi, function(key) {
-					 return replaceWith[key];
-					 });
-					 */
-
 					file.upload = Upload.upload({
 						url: vm.uploadUrl,
 						method: 'POST',
@@ -181,12 +204,23 @@
 						}
 
 					}).success(function(response) {
-						file.data = response;
-						file.done = true;
-						file.progress = 100;
-						file.downloadUrl = vm.downloadUrl.replace(':id', file.data.uuid);
+						plugFileData(file, response);
 
-						$scope.$emit('file:uploaded', {file: file});
+						setUploadBtnVisibility();
+						$scope.$emit('file:uploaded', file.data);
+
+						if(angular.isFunction($scope.onFileUploaded)) {
+							$scope.onFileUploaded(file.data);
+						}
+
+						if(angular.isFunction($scope.onUploadEnd)) {
+							vm.localGroupUploadedFiles++;
+
+							if(vm.localGroupFiles === vm.localGroupUploadedFiles) {
+								vm.localGroupFiles = vm.localGroupUploadedFiles = 0;
+								$scope.onUploadEnd();
+							}
+						}
 
 					}).error(function(response, status) {
 						if (status > 0) {
@@ -208,17 +242,32 @@
 					});
 				});
 
-				vm.showUploadBtn = !(vm.multiple === false && $files.length > 0);
 			};
 
 			vm.removeElement = function($index, file) {
 				file.animated = true;
 
 				$timeout(function() {
+					$scope.$emit('file:removed', {file: file.data});
+
+					if(angular.isFunction($scope.onFileRemoved)) {
+						$scope.onFileRemoved(file.data);
+					}
+
+					if(angular.isFunction($scope.onUploadEnd)) {
+						vm.localGroupFiles--;
+
+						if(vm.localGroupFiles === vm.localGroupUploadedFiles) {
+							vm.localGroupFiles = vm.localGroupUploadedFiles = 0;
+							$scope.onUploadEnd();
+						}
+
+					}
+
 					file.isVisible = false;
 					vm.files.splice($index, 1);
 
-					vm.showUploadBtn = !(vm.multiple === false && vm.files.length > 0);
+					setUploadBtnVisibility();
 				}, 600);
 			};
 
@@ -235,6 +284,5 @@
 						});
 				}
 			};
-
 		}];
 })();
