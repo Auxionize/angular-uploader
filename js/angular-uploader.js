@@ -33,12 +33,20 @@
 						class="file-link" \
 						ng-if="file.done" \
 						href="{{file.downloadUrl}}" \
+						title="{{file.data.name}}" \
 						target="_self"> \
 						<div class="link-name">{{file.data.name}}</div> \
-						<div class="link-size">({{file.data.size | bytes}})</div> \
+						<div class="link-size">{{file.data.size | bytes}}</div> \
 					</a> \
-					<div class="filename" ng-if="!file.done">{{file.data.name}}</div> \
-					<span class="link-size" ng-if="!file.done">({{file.data.size | bytes}})</span> \
+					<i \
+						ng-if="!vm.readOnly && file.done" \
+						ng-click="vm.unload($index, file)" \
+						class="glyphicon glyphicon-remove link-remove"> \
+					</i> \
+					<div class="file-holder" ng-if="!file.done"> \
+						<div class="filename" title="{{file.data.name}}">{{file.data.name}}</div> \
+						<span class="link-size">({{file.data.size | bytes}})</span> \
+					</div> \
 					<div ng-if="!file.done" class="tool-holder"> \
 						<i \
 							ng-click="vm.unload($index, file)" \
@@ -49,11 +57,6 @@
 							value="file.progress"> \
 						</uib-progressbar> \
 					</div> \
-					<i \
-						ng-if="!vm.readOnly && file.done" \
-						ng-click="vm.unload($index, file)" \
-						class="glyphicon glyphicon-remove link-remove"> \
-					</i> \
 				</div> \
 					<div ng-repeat="errFile in vm.invalidFiles" class="alert alert-danger" role="alert"> \
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
@@ -71,7 +74,6 @@
 					ngf-multiple="vm.multiple"> \
 					<i class="glyphicon glyphicon-paperclip"></i> \
 					<span>{{vm.btnText}}</span> \
-					<span ng-if="!vm.multiple">Attach File</span> \
 				</button> \
 			</form>';
 
