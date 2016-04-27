@@ -55,7 +55,7 @@
 	margin-right: 5px;
 }
 .upload-element .filename {
-	max-width: 40%;
+	width: 40%;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

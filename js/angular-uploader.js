@@ -50,8 +50,7 @@
 						</uib-progressbar> \
 					</div> \
 					<i \
-						ng-if="!vm.readOnly" \
-						ng-if="file.done" \
+						ng-if="!vm.readOnly && file.done" \
 						ng-click="vm.unload($index, file)" \
 						class="glyphicon glyphicon-remove link-remove"> \
 					</i> \
@@ -65,12 +64,13 @@
 				<button \
 					class="btn btn-default" \
 					ng-if="vm.showUploadBtn && !vm.readOnly" \
+					ng-disabled="vm.uploadInProgress" \
 					ngf-max-size="vm.maxFileSize" \
 					ngf-model-invalid="errorFile" \
 					ngf-select="vm.load($files, $invalidFiles)" \
 					ngf-multiple="vm.multiple"> \
 					<i class="glyphicon glyphicon-paperclip"></i> \
-					<span ng-if="vm.multiple">Attach Files</span> \
+					<span>{{vm.btnText}}</span> \
 					<span ng-if="!vm.multiple">Attach File</span> \
 				</button> \
 			</form>';
@@ -78,7 +78,7 @@
 
 			return {
 				scope: {
-					type: '<',
+					btnText: '<',
 					uploadUrl: '<',
 					downloadUrl: '<',
 					deleteUrl: '<',
@@ -107,22 +107,40 @@
 		'Upload',
 		function($scope, $timeout, $http, Upload) {
 			var vm = this;
+			var defaults = {
+				btnText: 'Attach file(s)',
+				initFiles: [],
+				multiple: false,
+				maxFileSize: '5MB',
+				debug: false
+			};
 
 			// set defaults =================================================
 			vm.files = [];
-			vm.initFiles = angular.isDefined($scope.initFiles) ? $scope.initFiles : [];
 			vm.invalidFiles = [];
-			vm.type = 'USER_BUCKET';//$scope.type;
+			vm.btnText = angular.isDefined($scope.btnText)
+				? $scope.btnText
+				: defaults.btnText;
+			vm.initFiles = angular.isDefined($scope.initFiles)
+				? $scope.initFiles
+				: defaults.initFiles;
+			vm.multiple = $scope.multiple = angular.isDefined($scope.multiple)
+				? $scope.multiple
+				: defaults.multiple;
+			vm.maxFileSize = $scope.maxFileSize = angular.isDefined($scope.maxFileSize)
+				? $scope.maxFileSize
+				: defaults.maxFileSize;
+			vm.debug = $scope.debug = angular.isDefined($scope.debug)
+				? $scope.debug
+				: defaults.debug;
 			vm.uploadUrl = $scope.uploadUrl;
 			vm.downloadUrl = $scope.downloadUrl;
 			vm.deleteUrl = $scope.deleteUrl;
-			vm.multiple = $scope.multiple = angular.isDefined($scope.multiple) ? $scope.multiple : false;
-			vm.maxFileSize = $scope.maxFileSize = angular.isDefined($scope.maxFileSize) ? $scope.maxFileSize : '2GB';
 			vm.readOnly = $scope.readOnly;
 			vm.showUploadBtn = true;
-			vm.debug = $scope.debug = angular.isDefined($scope.debug) ? $scope.debug : false;
 			vm.localGroupFiles = 0;
 			vm.localGroupUploadedFiles = 0;
+			vm.uploadInProgress = false;
 
 			// debug watcher ================================================
 			if(vm.debug) {
@@ -174,7 +192,8 @@
 				vm.localGroupFiles = $files.length;
 				var tempDate = new Date().getTime();
 
-				if(angular.isFunction($scope.onUploadInit)) {
+				if(angular.isFunction($scope.onUploadInit) && vm.localGroupFiles > 0) {
+					vm.uploadInProgress = true;
 					$scope.onUploadInit();
 				}
 
@@ -217,6 +236,7 @@
 							vm.localGroupUploadedFiles++;
 
 							if(vm.localGroupFiles === vm.localGroupUploadedFiles) {
+								vm.uploadInProgress = false;
 								vm.localGroupFiles = vm.localGroupUploadedFiles = 0;
 								$scope.onUploadEnd();
 							}
@@ -258,6 +278,7 @@
 						vm.localGroupFiles--;
 
 						if(vm.localGroupFiles === vm.localGroupUploadedFiles) {
+							vm.uploadInProgress = false;
 							vm.localGroupFiles = vm.localGroupUploadedFiles = 0;
 							$scope.onUploadEnd();
 						}
