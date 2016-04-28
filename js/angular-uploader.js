@@ -52,10 +52,10 @@
 							ng-click="vm.unload($index, file)" \
 							class="glyphicon glyphicon-remove link-internal"> \
 						</i> \
-						<uib-progressbar \
-							max="100" \
-							value="file.progress"> \
-						</uib-progressbar> \
+						<div class="progress">\
+							 <div class="progress-bar" role="progressbar" aria-valuenow="file.progress" aria-valuemin="0" aria-valuemax="100" style="width: {{file.progress}}%;">\
+							 </div>\
+						</div>\
 					</div> \
 				</div> \
 					<div ng-repeat="errFile in vm.invalidFiles" class="alert alert-danger" role="alert"> \
@@ -73,7 +73,7 @@
 					ngf-select="vm.load($files, $invalidFiles)" \
 					ngf-multiple="vm.multiple"> \
 					<i class="glyphicon glyphicon-paperclip"></i> \
-					<span>{{vm.btnText}}</span> \
+					<span translate>{{vm.btnText}}</span> \
 				</button> \
 			</form>';
 
@@ -191,6 +191,10 @@
 
 			// load / upload files ==========================================
 			vm.load = function($files, $invalidFiles) {
+				if(angular.isUndefined($files)) {
+					return;
+				}
+
 				vm.localGroupFiles = $files.length;
 				var tempDate = new Date().getTime();
 
