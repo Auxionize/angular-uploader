@@ -28,7 +28,7 @@
 					class="upload-element animated" \
 					ng-class="{zoomOut: file.animated}" \
 					role="alert" \
-					ng-repeat="(key, file) in vm.files"> \
+					ng-repeat="(key, file) in files"> \
 					<a \
 						class="file-link" \
 						ng-if="file.done" \
@@ -39,8 +39,8 @@
 						<div class="link-size">{{file.data.size | bytes}}</div> \
 					</a> \
 					<i \
-						ng-if="!vm.readOnly && file.done" \
-						ng-click="vm.unload($index, file)" \
+						ng-if="!readOnly && file.done" \
+						ng-click="unload($index, file)" \
 						class="glyphicon glyphicon-remove link-remove"> \
 					</i> \
 					<div class="file-holder" ng-if="!file.done"> \
@@ -49,7 +49,7 @@
 					</div> \
 					<div ng-if="!file.done" class="tool-holder"> \
 						<i \
-							ng-click="vm.unload($index, file)" \
+							ng-click="unload($index, file)" \
 							class="glyphicon glyphicon-remove link-internal"> \
 						</i> \
 						<div class="progress">\
@@ -58,7 +58,7 @@
 						</div>\
 					</div> \
 				</div> \
-					<div ng-repeat="errFile in vm.invalidFiles" class="alert alert-danger" role="alert"> \
+					<div ng-repeat="errFile in invalidFiles" class="alert alert-danger" role="alert"> \
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
 					<span aria-hidden="true">&times;</span> \
 				</button> \
@@ -66,14 +66,14 @@
 				</div> \
 				<button \
 					class="btn btn-default" \
-					ng-if="vm.showUploadBtn && !vm.readOnly" \
-					ng-disabled="vm.uploadInProgress" \
-					ngf-max-size="vm.maxFileSize" \
+					ng-if="showUploadBtn && !readOnly" \
+					ng-disabled="uploadInProgress" \
+					ngf-max-size="maxFileSize" \
 					ngf-model-invalid="errorFile" \
-					ngf-select="vm.load($files, $invalidFiles)" \
-					ngf-multiple="vm.multiple"> \
+					ngf-select="load($files, $invalidFiles)" \
+					ngf-multiple="multiple"> \
 					<i class="glyphicon glyphicon-paperclip"></i> \
-					<span translate>{{vm.btnText}}</span> \
+					<span translate>{{btnText}}</span> \
 				</button> \
 			</form>';
 
@@ -95,8 +95,7 @@
 					debug: '<?'
 				},
 				template: template,
-				controller: UploaderCtrl,
-				controllerAs: 'vm'
+				controller: UploaderCtrl
 			};
 		});
 
@@ -108,7 +107,6 @@
 		'$http',
 		'Upload',
 		function($scope, $timeout, $http, Upload) {
-			var vm = this;
 			var defaults = {
 				btnText: 'Attach file(s)',
 				initFiles: [],
@@ -118,93 +116,76 @@
 			};
 
 			// set defaults =================================================
-			vm.files = [];
-			vm.invalidFiles = [];
-			vm.btnText = angular.isDefined($scope.btnText)
+			$scope.files = [];
+			$scope.invalidFiles = [];
+			$scope.btnText = angular.isDefined($scope.btnText)
 				? $scope.btnText
 				: defaults.btnText;
-			vm.initFiles = angular.isDefined($scope.initFiles)
+			$scope.initFiles = angular.isDefined($scope.initFiles)
 				? $scope.initFiles
 				: defaults.initFiles;
-			vm.multiple = $scope.multiple = angular.isDefined($scope.multiple)
+			$scope.multiple = $scope.multiple = angular.isDefined($scope.multiple)
 				? $scope.multiple
 				: defaults.multiple;
-			vm.maxFileSize = $scope.maxFileSize = angular.isDefined($scope.maxFileSize)
+			$scope.maxFileSize = $scope.maxFileSize = angular.isDefined($scope.maxFileSize)
 				? $scope.maxFileSize
 				: defaults.maxFileSize;
-			vm.debug = $scope.debug = angular.isDefined($scope.debug)
+			$scope.debug = $scope.debug = angular.isDefined($scope.debug)
 				? $scope.debug
 				: defaults.debug;
-			vm.uploadUrl = $scope.uploadUrl;
-			vm.downloadUrl = $scope.downloadUrl;
-			vm.deleteUrl = $scope.deleteUrl;
-			vm.readOnly = $scope.readOnly;
-			vm.showUploadBtn = true;
-			vm.localGroupFiles = 0;
-			vm.localGroupUploadedFiles = 0;
-			vm.uploadInProgress = false;
-
-			// debug watcher ================================================
-			if(vm.debug) {
-				var watchValues = [
-					'multiple',
-					'uploadUrl',
-					'downloadUrl',
-					'maxFileSize'
-				];
-
-				$scope.$watchGroup(watchValues, function(newValues, oldValues) {
-					vm.multiple = $scope.$eval($scope.multiple);
-					vm.uploadUrl = newValues[1];
-					vm.downloadUrl = newValues[2];
-					vm.maxFileSize = newValues[3];
-
-					if(newValues[0] !== oldValues[0]) {
-						vm.files = [];
-					}
-
-				});
-			}
+			$scope.showUploadBtn = true;
+			$scope.localGroupFiles = 0;
+			$scope.localGroupUploadedFiles = 0;
+			$scope.uploadInProgress = false;
 
 			var plugFileData = function(file, fileData) {
 				file.data = fileData;
 				file.done = true;
 				file.progress = 100;
 				file.isVisible = true;
-				file.downloadUrl = vm.downloadUrl.replace(':id', file.data.uuid);
+				file.downloadUrl = $scope.downloadUrl.replace(':id', file.data.uuid);
 			};
 
 			var setUploadBtnVisibility = function() {
-				vm.showUploadBtn = !(vm.multiple === false && vm.files.length > 0);
+				$scope.showUploadBtn = !($scope.multiple === false && $scope.files.length > 0);
 			};
 
-			if(vm.initFiles.length > 0) {
-				angular.forEach(vm.initFiles, function(fileData) {
-					var currentFile = {};
+			var listenForInitFiles = function(oldValue, newValue) {
+				var tempData = angular.isUndefined(newValue) ? oldValue : newValue;
 
-					plugFileData(currentFile, fileData);
-					vm.files.push(currentFile);
-				});
+				if(tempData && tempData.length > 0) {
+					angular.forEach(tempData, function(fileData) {
+						var currentFile = {};
 
-				setUploadBtnVisibility();
-			}
+						plugFileData(currentFile, fileData);
+						$scope.files.push(currentFile);
+					});
+
+					setUploadBtnVisibility();
+
+				}
+			};
+
+			$scope.$watch('initFiles', listenForInitFiles);
+
 
 			// load / upload files ==========================================
-			vm.load = function($files, $invalidFiles) {
+			$scope.load = function($files, $invalidFiles) {
+				console.info("@load", $files);
 				if(angular.isUndefined($files)) {
 					return;
 				}
 
-				vm.localGroupFiles = $files.length;
+				$scope.localGroupFiles = $files.length;
 				var tempDate = new Date().getTime();
 
-				if(angular.isFunction($scope.onUploadInit) && vm.localGroupFiles > 0) {
-					vm.uploadInProgress = true;
+				if(angular.isFunction($scope.onUploadInit) && $scope.localGroupFiles > 0) {
+					$scope.uploadInProgress = true;
 					$scope.onUploadInit();
 				}
 
-				vm.files = vm.files.concat($files);
-				vm.invalidFiles = $invalidFiles;
+				$scope.files = $scope.files.concat($files);
+				$scope.invalidFiles = $invalidFiles;
 
 				angular.forEach($files, function(file, index) {
 					var fileDate = new Date(tempDate++);
@@ -220,7 +201,7 @@
 					file.progress = 0;
 
 					file.upload = Upload.upload({
-						url: vm.uploadUrl,
+						url: $scope.uploadUrl,
 						method: 'POST',
 						file: file
 					}).progress(function(evt) {
@@ -239,18 +220,18 @@
 						}
 
 						if(angular.isFunction($scope.onUploadEnd)) {
-							vm.localGroupUploadedFiles++;
+							$scope.localGroupUploadedFiles++;
 
-							if(vm.localGroupFiles === vm.localGroupUploadedFiles) {
-								vm.uploadInProgress = false;
-								vm.localGroupFiles = vm.localGroupUploadedFiles = 0;
+							if($scope.localGroupFiles === $scope.localGroupUploadedFiles) {
+								$scope.uploadInProgress = false;
+								$scope.localGroupFiles = $scope.localGroupUploadedFiles = 0;
 								$scope.onUploadEnd();
 							}
 						}
 
 					}).error(function(response, status) {
 						if (status > 0) {
-							vm.removeElement(index, file);
+							$scope.removeElement(index, file);
 
 							var invalidFile = {
 								name: file.name,
@@ -270,7 +251,7 @@
 
 			};
 
-			vm.removeElement = function($index, file) {
+			$scope.removeElement = function($index, file) {
 				file.animated = true;
 
 				$timeout(function() {
@@ -281,33 +262,33 @@
 					}
 
 					if(angular.isFunction($scope.onUploadEnd)) {
-						vm.localGroupFiles--;
+						$scope.localGroupFiles--;
 
-						if(vm.localGroupFiles === vm.localGroupUploadedFiles) {
-							vm.uploadInProgress = false;
-							vm.localGroupFiles = vm.localGroupUploadedFiles = 0;
+						if($scope.localGroupFiles === $scope.localGroupUploadedFiles) {
+							$scope.uploadInProgress = false;
+							$scope.localGroupFiles = $scope.localGroupUploadedFiles = 0;
 							$scope.onUploadEnd();
 						}
 
 					}
 
 					file.isVisible = false;
-					vm.files.splice($index, 1);
+					$scope.files.splice($index, 1);
 
 					setUploadBtnVisibility();
 				}, 600);
 			};
 
 			// unload files =================================================
-			vm.unload = function($index, file) {
+			$scope.unload = function($index, file) {
 				if(!file.done) {
 					file.upload.abort();
-					vm.removeElement($index, file);
+					$scope.removeElement($index, file);
 				}
 				else {
-					$http.delete(vm.deleteUrl.replace(':id', file.data.linkId))
+					$http.delete($scope.deleteUrl.replace(':id', file.data.linkId))
 						.success(function() {
-							vm.removeElement($index, file);
+							$scope.removeElement($index, file);
 						});
 				}
 			};
