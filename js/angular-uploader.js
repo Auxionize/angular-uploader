@@ -171,7 +171,6 @@
 
 			// load / upload files ==========================================
 			$scope.load = function($files, $invalidFiles) {
-				console.info("@load", $files);
 				if(angular.isUndefined($files)) {
 					return;
 				}
