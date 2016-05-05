@@ -138,6 +138,10 @@
 			$scope.localGroupUploadedFiles = 0;
 			$scope.uploadInProgress = false;
 
+			$scope.$on('uploader:resetFiles', function() {
+				$scope.files = [];
+			});
+
 			var plugFileData = function(file, fileData) {
 				file.data = fileData;
 				file.done = true;
