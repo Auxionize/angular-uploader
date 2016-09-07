@@ -187,7 +187,10 @@
 					$scope.onUploadInit();
 				}
 
-				$scope.files = $scope.files.concat($files);
+				angular.forEach($files, function(file) {
+					$scope.files.push(file);
+				});
+
 				$scope.invalidFiles = $invalidFiles;
 
 				angular.forEach($files, function(file, index) {
