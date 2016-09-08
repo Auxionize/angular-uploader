@@ -69,6 +69,7 @@
 					ng-if="showUploadBtn && !readOnly" \
 					ng-disabled="uploadInProgress" \
 					ngf-max-size="maxFileSize" \
+					ngf-pattern="supported"\
 					ngf-model-invalid="errorFile" \
 					ngf-select="load($files, $invalidFiles)" \
 					ngf-multiple="multiple"> \
@@ -87,6 +88,7 @@
 					readOnly: '<',
 					multiple: '<?',
 					maxFileSize: '<?',
+					supported: '<?',
 					initFiles: '<?',
 					onFileUploaded: '=?',
 					onFileRemoved: '=?',
@@ -107,11 +109,30 @@
 		'$http',
 		'Upload',
 		function($scope, $timeout, $http, Upload) {
+			var mimeTypes = [
+				'image/*',
+				'text/plain',
+				'text/richtext',
+				'application/msword',
+				'application/pdf',
+				'application/rtf',
+				'application/x-rtf',
+				'application/excel',
+				'application/x-excel',
+				'application/x-msexcel',
+				'application/vnd.ms-excel',
+				'application/x-excel',
+				'application/x-msexcel',
+				'application/xml',
+				'text/xml'
+
+			];
 			var defaults = {
 				btnText: 'Attach file(s)',
 				initFiles: [],
 				multiple: false,
 				maxFileSize: '5MB',
+				supported: mimeTypes.join(),
 				debug: false
 			};
 
@@ -124,12 +145,15 @@
 			$scope.initFiles = angular.isDefined($scope.initFiles)
 				? $scope.initFiles
 				: defaults.initFiles;
-			$scope.multiple = $scope.multiple = angular.isDefined($scope.multiple)
+			$scope.multiple = angular.isDefined($scope.multiple)
 				? $scope.multiple
 				: defaults.multiple;
-			$scope.maxFileSize = $scope.maxFileSize = angular.isDefined($scope.maxFileSize)
+			$scope.maxFileSize = angular.isDefined($scope.maxFileSize)
 				? $scope.maxFileSize
 				: defaults.maxFileSize;
+			$scope.supported = angular.isDefined($scope.supported)
+				? $scope.supported
+				: defaults.supported;
 			$scope.debug = $scope.debug = angular.isDefined($scope.debug)
 				? $scope.debug
 				: defaults.debug;
@@ -187,15 +211,12 @@
 					$scope.onUploadInit();
 				}
 
-				angular.forEach($files, function(file) {
-					$scope.files.push(file);
-				});
-
 				$scope.invalidFiles = $invalidFiles;
 
 				angular.forEach($files, function(file, index) {
 					var fileDate = new Date(tempDate++);
 
+					$scope.files.push(file);
 					file.data = {
 						date: fileDate,
 						name: file.name,
