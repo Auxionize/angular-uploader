@@ -109,30 +109,13 @@
 		'$http',
 		'Upload',
 		function($scope, $timeout, $http, Upload) {
-			var mimeTypes = [
-				'image/*',
-				'text/plain',
-				'text/richtext',
-				'application/msword',
-				'application/pdf',
-				'application/rtf',
-				'application/x-rtf',
-				'application/excel',
-				'application/x-excel',
-				'application/x-msexcel',
-				'application/vnd.ms-excel',
-				'application/x-excel',
-				'application/x-msexcel',
-				'application/xml',
-				'text/xml'
-
-			];
+			var supportedTypes = ['!.exe'];
 			var defaults = {
 				btnText: 'Attach file(s)',
 				initFiles: [],
 				multiple: false,
 				maxFileSize: '5MB',
-				supported: mimeTypes.join(),
+				supported: supportedTypes.join(),
 				debug: false
 			};
 
