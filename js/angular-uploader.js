@@ -162,6 +162,7 @@
 			};
 
 			var listenForInitFiles = function(oldValue, newValue) {
+				$scope.files = [];
 				var tempData = angular.isUndefined(newValue) ? oldValue : newValue;
 
 				if(tempData && tempData.length > 0) {
