@@ -65,7 +65,9 @@
 				Error uploading: \'{{errFile.name}}\'({{errFile.size | bytes}}) {{errFile.$error}} {{errFile.$errorParam}} \
 				</div> \
 				<button \
+					\
 					class="btn btn-default" \
+					ng-class="btnClass" \
 					ng-if="showUploadBtn && !readOnly" \
 					ng-disabled="uploadInProgress" \
 					ngf-max-size="maxFileSize" \
@@ -82,6 +84,7 @@
 			return {
 				scope: {
 					btnText: '<',
+					btnClass: '<?',
 					uploadUrl: '<',
 					downloadUrl: '<',
 					deleteUrl: '<',
@@ -125,6 +128,7 @@
 			$scope.btnText = angular.isDefined($scope.btnText)
 				? $scope.btnText
 				: defaults.btnText;
+			$scope.btnClass = angular.isDefined($scope.btnClass)?$scope.btnClass:['btn-default']
 			$scope.initFiles = angular.isDefined($scope.initFiles)
 				? $scope.initFiles
 				: defaults.initFiles;
