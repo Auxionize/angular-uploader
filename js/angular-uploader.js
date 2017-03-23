@@ -7,16 +7,16 @@
 
 	// Directive definition =============================================
 	angular.module('ui.angular-uploader', [
-			'ngFileUpload',
-			'ui.bootstrap'
-		])
+		'ngFileUpload',
+		'ui.bootstrap'
+	])
 		.filter('bytes', function() {
 			return function(bytes, precision) {
-				if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) return '-';
-				if (typeof precision === 'undefined') precision = 1;
+				if(isNaN(parseFloat(bytes)) || !isFinite(bytes)) return '-';
+				if(typeof precision === 'undefined') precision = 1;
 				var units = ['bytes', 'kb', 'MB', 'GB', 'TB', 'PB'],
 					number = Math.floor(Math.log(bytes) / Math.log(1024));
-				return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) +  ' ' + units[number];
+				return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) + ' ' + units[number];
 			}
 		})
 		.directive('angularUploader', function() {
@@ -95,6 +95,7 @@
 					initFiles: '<?',
 					onFileUploaded: '=?',
 					onFileRemoved: '=?',
+					onBeforeFileRemoved: '=?',
 					onUploadInit: '=?',
 					onUploadEnd: '=?',
 					debug: '<?'
@@ -128,7 +129,7 @@
 			$scope.btnText = angular.isDefined($scope.btnText)
 				? $scope.btnText
 				: defaults.btnText;
-			$scope.btnClass = angular.isDefined($scope.btnClass)?$scope.btnClass:['btn-default']
+			$scope.btnClass = angular.isDefined($scope.btnClass) ? $scope.btnClass : ['btn-default']
 			$scope.initFiles = angular.isDefined($scope.initFiles)
 				? $scope.initFiles
 				: defaults.initFiles;
@@ -245,7 +246,7 @@
 						}
 
 					}).error(function(response, status) {
-						if (status > 0) {
+						if(status > 0) {
 							$scope.removeElement(index, file);
 
 							var invalidFile = {
@@ -301,11 +302,20 @@
 					$scope.removeElement($index, file);
 				}
 				else {
-					$http.delete($scope.deleteUrl.replace(':id', file.data.linkId))
-						.success(function() {
-							$scope.removeElement($index, file);
-						});
+					if(angular.isFunction($scope.onBeforeFileRemoved)) {
+						$scope.onBeforeFileRemoved($index, file, $scope.removeData);
+					}
+					else {
+						$scope.removeData($index, file);
+					}
 				}
 			};
+
+			$scope.removeData = function($index, file) {
+				$http.delete($scope.deleteUrl.replace(':id', file.data.linkId))
+					.success(function() {
+						$scope.removeElement($index, file);
+					});
+			}
 		}];
 })();
